@@ -1,11 +1,14 @@
 from dataclasses import dataclass, field
 from .cards import NUM_CARDS, describe_cards
+from typing import List
+
+ACTION_SIZE=2*NUM_CARDS+1
 
 @dataclass
 class Action:
-    purchases: list[int] = field(default_factory=lambda:[0]*NUM_CARDS)
+    purchases: List[int] = field(default_factory=lambda:[0]*NUM_CARDS)
     backPrincess: bool = False
-    toDomain: list[int] = field(default_factory=lambda:[0]*NUM_CARDS)
+    toDomain: List[int] = field(default_factory=lambda:[0]*NUM_CARDS)
 
     def __str__(self) -> str:
         if self.backPrincess:
@@ -15,5 +18,5 @@ class Action:
         else:
             return f'Buy {describe_cards(self.purchases)}'
 
-    def flatten(self) -> list[int]:
+    def flatten(self) -> List[int]:
         return self.purchases + self.toDomain + [1 if self.backPrincess else 0]

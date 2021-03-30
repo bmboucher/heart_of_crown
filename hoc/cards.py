@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class Card:
@@ -23,21 +24,21 @@ NUM_CARDS = len(Cards)
 InitialDeck = [7, 0, 0, 3, 0, 0, 0]
 TerritoryPriority = [2, 1, 0] # Large city > city > farming village
 
-def cards_to_str(counts: list[int]) -> list[str]:
+def cards_to_str(counts: List[int]) -> List[str]:
     return [f'{n} {Cards[i].name}' for i,n in enumerate(counts) if n > 0]
 
-def print_cards(counts: list[int]) -> None:
+def print_cards(counts: List[int]) -> None:
     print('\n'.join(f'  {s}' for s in cards_to_str(counts)))
 
-def describe_cards(counts: list[int]) -> str:
+def describe_cards(counts: List[int]) -> str:
     if sum(counts) == 0:
         return 'no cards'
     else:
         return ', '.join(cards_to_str(counts))
 
-def purchase_options(coins: int, idx: int = 0) -> list[list[int]]:
+def purchase_options(coins: int, idx: int = 0) -> List[List[int]]:
     max_cards = coins // Cards[idx].cost if Cards[idx].forSale else 0
-    opts: list[list[int]] = []
+    opts: List[List[int]] = []
     if idx == len(Cards) - 1:
         return list([n] for n in range(max_cards + 1))
     else:

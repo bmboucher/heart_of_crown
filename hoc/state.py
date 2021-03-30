@@ -1,14 +1,16 @@
 from dataclasses import dataclass, replace, field
-from tkinter import N
-from .cards import NUM_CARDS, Cards, InitialDeck, print_cards, purchase_options, describe_cards, TerritoryPriority
+from .cards import NUM_CARDS, Cards, InitialDeck, print_cards, purchase_options, TerritoryPriority
 from random import randrange
 from .action import Action
+from typing import Callable, List, Tuple
+
+STATE_SIZE = 3*NUM_CARDS + 2
 
 @dataclass(frozen=True)
 class GameState:
-    drawPile: list[int] = field(default_factory=lambda:InitialDeck)
-    discardPile: list[int] = field(default_factory=lambda:[0]*NUM_CARDS)
-    hand: list[int] = field(default_factory=lambda:[0]*NUM_CARDS)
+    drawPile: List[int] = field(default_factory=lambda:InitialDeck)
+    discardPile: List[int] = field(default_factory=lambda:[0]*NUM_CARDS)
+    hand: List[int] = field(default_factory=lambda:[0]*NUM_CARDS)
     backedPrincess: bool = False
     successionPoints: int = 0
 
@@ -19,7 +21,11 @@ class GameState:
         else:
             return 'No princess backed'
 
-    def flatten(self) -> list[int]:
+    @property
+    def finished(self) -> bool:
+        return self.backedPrincess and self.successionPoints >= 20
+
+    def flatten(self) -> List[int]:
         return self.drawPile + self.hand + self.discardPile \
                 + [1 if self.backedPrincess else 0, self.successionPoints]
 
@@ -35,7 +41,7 @@ class GameState:
             print_cards(self.hand)
 
     def draw(self) -> 'GameState':
-        hand: list[int] = [0]*NUM_CARDS
+        hand: List[int] = [0]*NUM_CARDS
         if sum(self.drawPile) < 5:
             hand = self.drawPile.copy()
             draw = self.discardPile.copy()
@@ -52,7 +58,7 @@ class GameState:
 
         return replace(self, drawPile=draw, discardPile=discard, hand=hand)
 
-    def cleanup(self, new_cards: list[int] = None) -> 'GameState':
+    def cleanup(self, new_cards: List[int] = None) -> 'GameState':
         new_discard = self.discardPile.copy()
         for i in range(NUM_CARDS):
             new_discard[i] += self.hand[i]
@@ -80,7 +86,7 @@ class GameState:
     def coins(self) -> int:
         return sum(n * Cards[i].coins for i, n in enumerate(self.hand))
 
-    def available_actions(self) -> list[Action]:
+    def available_actions(self) -> List[Action]:
         coins = self.coins
         actions = [Action(purchases=new_cards)
             for new_cards in purchase_options(coins)]
@@ -98,5 +104,19 @@ class GameState:
                 actions.append(Action(toDomain=toDomain))
         return actions
 
-    def next_states(self) -> list[tuple[Action, 'GameState']]:
+    def next_states(self) -> List[Tuple[Action, 'GameState']]:
         return [(a, self.apply_action(a)) for a in self.available_actions()]
+
+class Game:
+    def __init__(self):
+        self.state = GameState()
+        self.transcript: List[Tuple[GameState, Action, int]] = []
+
+    def run(self, strategy:Callable[[GameState], Action]):
+        while not self.state.finished:
+            self.state = self.state.draw()
+            action = strategy(self.state)
+            next_state = self.state.apply_action(action)
+            self.transcript.append((self.state, action, 
+                next_state.successionPoints - self.state.successionPoints))
+            self.state = next_state
