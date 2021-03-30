@@ -14,3 +14,6 @@ class Action:
             return f'Place {describe_cards(self.toDomain)} in domain'
         else:
             return f'Buy {describe_cards(self.purchases)}'
+
+    def flatten(self) -> list[int]:
+        return self.purchases + self.toDomain + [1 if self.backPrincess else 0]

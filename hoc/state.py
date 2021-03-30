@@ -19,6 +19,10 @@ class GameState:
         else:
             return 'No princess backed'
 
+    def flatten(self) -> list[int]:
+        return self.drawPile + self.hand + self.discardPile \
+                + [1 if self.backedPrincess else 0, self.successionPoints]
+
     def print(self) -> None:
         if sum(self.drawPile) > 0:
             print('Draw pile')
@@ -39,7 +43,7 @@ class GameState:
         else:
             draw = self.drawPile.copy()
             discard = self.discardPile.copy()
-        for _ in range(5):
+        for _ in range(5 - sum(hand)):
             selected = randrange(sum(draw))
             card_idx = next(i for i in range(NUM_CARDS) 
                             if sum(draw[:(i+1)]) > selected)

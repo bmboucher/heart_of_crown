@@ -2,7 +2,11 @@ from .state import GameState
 from .action import Action
 import random
 
-def play_game():
+from pathlib import Path
+OUTPUT = Path(__file__).parent / 'output' / 'raw.txt'
+OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+
+def play_game() -> list[tuple[Action, GameState, GameState]]:
     s = GameState()
     transcript: list[tuple[Action, GameState, GameState]] = []
     while not s.backedPrincess or s.successionPoints < 20:
@@ -17,11 +21,14 @@ def play_game():
             chosen = random.choice(actions)
         s = next_s[actions.index(chosen)][1]
         transcript.append((chosen, draw_s, s))
-    print('\n'.join(f'{draw_s.coins:2} coins -> {str(c):45} {s.status}' for c,draw_s,s in transcript))
     return transcript
 
 if __name__ == '__main__':
-    for i in range(10):
-        print(f'=== GAME {i} ===\n')
-        play_game()
-        print()
+    with OUTPUT.open('w') as outf:
+        for i in range(10000):
+            t = play_game()
+            for a,s,next_s in t:
+                outf.write(f'{i}'
+                    + ' '.join(f'{j}' for j in s.flatten() + a.flatten()) 
+                    + '\n')
+            print(f'Game {i:2} - {len(t):2} rounds')
