@@ -112,7 +112,8 @@ class Game:
         self.state = GameState()
         self.transcript: List[Tuple[GameState, Action, int]] = []
 
-    def run(self, strategy:Callable[[GameState], Action]):
+    def run(self, strategy:Callable[[GameState], Action], max_rounds: int = None):
+        rounds = 0
         while not self.state.finished:
             self.state = self.state.draw()
             action = strategy(self.state)
@@ -120,3 +121,16 @@ class Game:
             self.transcript.append((self.state, action, 
                 next_state.successionPoints - self.state.successionPoints))
             self.state = next_state
+            rounds += 1
+            if max_rounds and rounds >= max_rounds:
+                break
+
+    @property
+    def princessRound(self) -> int:
+        rounds = [i for i, (_, action, _) in enumerate(self.transcript)
+                    if action.backPrincess]
+        return None if len(rounds) == 0 else rounds[0]
+
+    @property
+    def summary(self) -> str:
+        return f'{self.princessRound} / {len(self.transcript)}'
